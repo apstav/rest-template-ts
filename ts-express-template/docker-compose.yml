@@ -1,0 +1,75 @@
+# version: '3.8'
+
+# services:
+#   app:
+#     build: .
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - NODE_ENV=development
+#       - PORT=3000
+#       - DB_HOST=mongodb
+#       - DB_PORT=27017
+#       - DB_NAME=devices_db
+#       - DB_USER=root
+#       - DB_PASSWORD=example
+#     depends_on:
+#       - mongodb
+#     networks:
+#       - app-net
+
+#   mongodb:
+#     image: mongo:6.0
+#     container_name: mongodb
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: root
+#       MONGO_INITDB_ROOT_PASSWORD: example
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongo-data:/data/db
+#     networks:
+#       - app-net
+#     restart: always
+
+# volumes:
+#   mongo-data:
+
+# networks:
+#   app-net:
+#     driver: bridge
+
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env  # Reference the .env file here
+    depends_on:
+      - mongodb
+    networks:
+      - app-net
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    env_file:
+      - .env  # Reference the .env file here for MongoDB
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-net
+    restart: always
+
+volumes:
+  mongo-data:
+
+networks:
+  app-net:
+    driver: bridge
