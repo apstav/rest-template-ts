@@ -7,7 +7,7 @@ dist/
 # TypeScript cache
 *.tsbuildinfo
 
-docker/
+data/
 
 # Logs
 logs/
