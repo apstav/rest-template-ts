@@ -1,35 +1,14 @@
-import { Sequelize } from 'sequelize';
+import mongoose from 'mongoose';
 import { config } from '../config/config';
-import Thermometer from './thermometer.model';
 
-const sequelize = new Sequelize(config.db.name, config.db.user, config.db.password, {
-  host: config.db.host,
-  port: config.db.port,
-  dialect: 'postgres',
-  dialectOptions: {
-    ssl:
-      process.env.DB_SSL === 'true'
-        ? {
-            require: true,
-            rejectUnauthorized: false,
-          }
-        : false,
-  },
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-  //logging: config.db.logging
-});
-
-// eslint-disable-next-line prettier/prettier
-const db = {
-  sequelize,
-  Sequelize,
-  Thermometer,
+const connectDB = async () => {
+  try {
+    await mongoose.connect(config.db.uri, config.db.options);
+    console.log('MongoDB connected');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
 };
 
-export default db;
-export { sequelize, Thermometer };
+export { mongoose, connectDB };

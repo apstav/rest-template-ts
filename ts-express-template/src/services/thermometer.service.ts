@@ -3,56 +3,50 @@ import { ThermometerInput, ThermometerOutput } from '../interfaces/thermometer.i
 import { faker } from '../utils/faker';
 
 class ThermometerService {
+  private toOutput(document: any): ThermometerOutput {
+    const { _id, __v, ...rest } = document.toObject ? document.toObject() : document;
+    return {
+      ...rest,
+      id: _id.toString(),
+      recordedAt: rest.recordedAt || new Date()
+    };
+  }
+
   public async createThermometerData(data: ThermometerInput): Promise<ThermometerOutput> {
-    const created = await Thermometer.create({
-      ...data,
-      recordedAt: data.recordedAt || new Date() // Ensure recordedAt is always set
-    });
-    return this.toOutput(created);
+    const thermometer = new Thermometer(data);
+    await thermometer.save();
+    return this.toOutput(thermometer);
   }
 
   public async getAllThermometerData(): Promise<ThermometerOutput[]> {
-    const allData = await Thermometer.findAll();
-    return allData.map(this.toOutput);
+    const documents = await Thermometer.find();
+    return documents.map(this.toOutput);
   }
 
   public async getThermometerDataById(id: string): Promise<ThermometerOutput | null> {
-    const data = await Thermometer.findByPk(id);
-    return data ? this.toOutput(data) : null;
+    const document = await Thermometer.findById(id);
+    return document ? this.toOutput(document) : null;
   }
 
   public async getThermometerDataByDeviceId(deviceId: string): Promise<ThermometerOutput[]> {
-    const data = await Thermometer.findAll({ where: { deviceId } });
-    return data.map(this.toOutput);
+    const documents = await Thermometer.find({ deviceId });
+    return documents.map(this.toOutput);
   }
 
-  public async updateThermometerData(id: string, data: Partial<ThermometerInput>): Promise<[number]> {
-    return await Thermometer.update(data, { where: { id } });
+  public async updateThermometerData(id: string, data: Partial<ThermometerInput>): Promise<ThermometerOutput | null> {
+    const document = await Thermometer.findByIdAndUpdate(id, data, { new: true });
+    return document ? this.toOutput(document) : null;
   }
 
-  public async deleteThermometerData(id: string): Promise<number> {
-    return await Thermometer.destroy({ where: { id } });
+  public async deleteThermometerData(id: string): Promise<ThermometerOutput | null> {
+    const document = await Thermometer.findByIdAndDelete(id);
+    return document ? this.toOutput(document) : null;
   }
 
   public async generateFakeData(count: number = 1): Promise<ThermometerOutput[]> {
-    const fakeData = Array.from({ length: count }, () => ({
-      ...faker.thermometerData(),
-      recordedAt: new Date() // Ensure recordedAt is set
-    }));
-    const created = await Thermometer.bulkCreate(fakeData);
+    const fakeData = Array.from({ length: count }, () => faker.thermometerData());
+    const created = await Thermometer.insertMany(fakeData);
     return created.map(this.toOutput);
-  }
-
-  private toOutput(model: Thermometer): ThermometerOutput {
-    return {
-      id: model.id,
-      deviceId: model.deviceId,
-      temperature: model.temperature,
-      humidity: model.humidity ?? undefined,
-      batteryLevel: model.batteryLevel,
-      location: model.location,
-      recordedAt: model.recordedAt
-    };
   }
 }
 

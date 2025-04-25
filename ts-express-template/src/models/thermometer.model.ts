@@ -1,75 +1,46 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from './index';
+import mongoose from 'mongoose';
 
-interface ThermometerAttributes {
-  id: string;
+interface ThermometerDocument extends mongoose.Document {
   deviceId: string;
   temperature: number;
-  humidity: number | null;
+  humidity?: number;
   batteryLevel: number;
   location: string;
   recordedAt: Date;
 }
 
-// For creation, we omit the id (it's auto-generated) and make humidity truly optional
-type ThermometerCreationAttributes = Optional<
-  Omit<ThermometerAttributes, 'id'>,
-  'humidity'
->;
-
-class Thermometer extends Model<ThermometerAttributes, ThermometerCreationAttributes>
-  implements ThermometerAttributes {
-  public id!: string;
-  public deviceId!: string;
-  public temperature!: number;
-  public humidity!: number | null;
-  public batteryLevel!: number;
-  public location!: string;
-  public recordedAt!: Date;
-}
-
-Thermometer.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    deviceId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    temperature: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-    },
-    humidity: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    batteryLevel: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      validate: {
-        min: 0,
-        max: 100,
-      },
-    },
-    location: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    recordedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
+const ThermometerSchema = new mongoose.Schema({
+  deviceId: {
+    type: String,
+    required: true,
   },
-  {
-    sequelize,
-    tableName: 'thermometers',
-    timestamps: false,
-  }
-);
+  temperature: {
+    type: Number,
+    required: true,
+  },
+  humidity: {
+    type: Number,
+  },
+  batteryLevel: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 100,
+  },
+  long: {
+    type: Number,
+    required: true,
+  },
+  lat: {
+    type: Number,
+    required: true,
+  },
+  recordedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const Thermometer = mongoose.model<ThermometerDocument>('Thermometer', ThermometerSchema);
 
 export default Thermometer;

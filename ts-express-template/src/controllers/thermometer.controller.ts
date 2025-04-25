@@ -64,11 +64,11 @@ class ThermometerController {
       const id = req.params.id;
       const data: Partial<ThermometerInput> = req.body;
       const updatedCount = await this.thermometerService.updateThermometerData(id, data);
-      if (updatedCount[0] > 0) {
+      //if (updatedCount[0] > 0) {
         res.status(200).json({ message: 'Data updated successfully' });
-      } else {
+      //} else {
         res.status(404).json({ message: 'Data not found' });
-      }
+      //}
     } catch (error) {
       this.handleError(res, error);
     }
@@ -78,11 +78,11 @@ class ThermometerController {
     try {
       const id = req.params.id;
       const deletedCount = await this.thermometerService.deleteThermometerData(id);
-      if (deletedCount > 0) {
+      //if (deletedCount > 0) {
         res.status(200).json({ message: 'Data deleted successfully' });
-      } else {
-        res.status(404).json({ message: 'Data not found' });
-      }
+      //} else {
+        //res.status(404).json({ message: 'Data not found' });
+      //}
     } catch (error) {
       this.handleError(res, error);
     }
@@ -102,5 +102,6 @@ class ThermometerController {
     }
   };
 }
+
 
 export default ThermometerController;

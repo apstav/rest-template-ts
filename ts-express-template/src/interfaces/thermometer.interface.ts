@@ -3,13 +3,14 @@ interface ThermometerInput {
   temperature: number;
   humidity?: number | null;
   batteryLevel: number;
-  location: string;
+  long: number;
+  lat: number;
   recordedAt?: Date;
 }
 
-interface ThermometerOutput extends ThermometerInput {
+interface ThermometerOutput extends Omit<ThermometerInput, 'id'> {
   id: string;
-  recordedAt: Date; // Make sure this is required in output
+  recordedAt: Date;
 }
 
 export type { ThermometerInput, ThermometerOutput };

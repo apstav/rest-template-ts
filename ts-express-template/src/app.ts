@@ -4,7 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import routes from './routes';
 import errorMiddleware from './middlewares/error.middleware';
-import { sequelize } from './models';
+import { connectDB } from './models';
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import swaggerOptions from './config/swagger';
 
 class App {
   public app: Application;
@@ -13,6 +16,7 @@ class App {
     this.app = express();
     this.initializeDatabase();
     this.initializeMiddlewares();
+    this.initializeSwagger();
     this.initializeRoutes();
     this.initializeErrorHandling();
   }
@@ -26,13 +30,12 @@ class App {
   }
 
   private async initializeDatabase(): Promise<void> {
-    try {
-      await sequelize.authenticate();
-      await sequelize.sync({ force: process.env.NODE_ENV === 'development' });
-      console.log('Database connected and synced');
-    } catch (error) {
-      console.error('Database connection error:', error);
-    }
+    await connectDB();
+  }
+
+  private initializeSwagger(): void {
+    const specs = swaggerJSDoc(swaggerOptions);
+    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
   }
 
   private initializeRoutes(): void {
