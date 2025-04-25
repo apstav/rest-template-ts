@@ -3,6 +3,9 @@
     "node": true,
     "es2021": true
   },
+  "eslint.workingDirectories": [
+    "src"
+  ],
   "extends": [
     "eslint:recommended",
     "plugin:prettier/recommended",
