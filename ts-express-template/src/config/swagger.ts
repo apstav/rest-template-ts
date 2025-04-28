@@ -3,12 +3,12 @@ import { SwaggerDefinition } from 'swagger-jsdoc';
 const swaggerDefinition: SwaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'Thermometer API Documentation',
+    title: 'Devices API Documentation',
     version: '1.0.0',
-    description: 'API for managing thermometer device data',
+    description: 'API for managing device data',
     contact: {
-      name: 'Your Name',
-      email: 'your.email@example.com'
+      name: 'RDI',
+      email: 'test@rdi.com'
     }
   },
   servers: [

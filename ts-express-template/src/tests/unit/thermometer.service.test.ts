@@ -18,7 +18,8 @@ describe('ThermometerService', () => {
         temperature: 22.5,
         humidity: 45.0,
         batteryLevel: 85.0,
-        location: 'Living Room',
+        long: 37.12,
+        lat : 23.12
       };
 
       (Thermometer.create as jest.Mock).mockResolvedValue(mockData);
@@ -29,5 +30,5 @@ describe('ThermometerService', () => {
     });
   });
 
-  // Add more test cases for other methods
+  
 });
