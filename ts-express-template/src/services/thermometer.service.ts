@@ -1,6 +1,6 @@
-import Thermometer from '../models/thermometer.model';
-import { ThermometerInput, ThermometerOutput } from '../interfaces/thermometer.interface';
-import { faker } from '../utils/faker';
+import {Thermometer} from '../models/index';
+import { ThermometerInput, ThermometerOutput } from '../interfaces/index';
+import { faker } from '../utils/index';
 
 class ThermometerService {
   private toOutput(document: any): ThermometerOutput {

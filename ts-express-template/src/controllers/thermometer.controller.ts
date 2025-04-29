@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
-import ThermometerService from '../services/thermometer.service';
-import { ThermometerInput } from '../interfaces/thermometer.interface';
-import { logger } from '../utils/logger';
-import { BadRequestError } from '../utils/errors/badRequestError';
-import { NotFoundError } from '../utils/errors/notFoundError';
-import { BaseError } from '../utils/errors/baseError';
+import  { ThermometerService } from '../services/index';
+import { ThermometerInput } from '../interfaces/index';
+import { logger, BadRequestError, NotFoundError, BaseError } from '../utils/index';
 
 class ThermometerController {
   private readonly service: ThermometerService = new ThermometerService();
