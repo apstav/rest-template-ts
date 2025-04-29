@@ -1,4 +1,4 @@
-import {Thermometer} from '../models/index';
+import { Thermometer } from '../models/index';
 import { ThermometerInput, ThermometerOutput } from '../interfaces/index';
 import { faker } from '../utils/index';
 
@@ -8,7 +8,7 @@ class ThermometerService {
     return {
       ...rest,
       id: _id.toString(),
-      recordedAt: rest.recordedAt || new Date()
+      recordedAt: rest.recordedAt || new Date(),
     };
   }
 

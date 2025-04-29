@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import ThermometerController from '../controllers/thermometer.controller';
 
-
 /**
  * @swagger
  * tags:
@@ -39,7 +38,6 @@ class ThermometerRoutes {
   }
 
   private initializeRoutes() {
-
     /**
      * @swagger
      * /thermometer:
@@ -81,7 +79,7 @@ class ThermometerRoutes {
      *                 $ref: '#/components/schemas/ThermometerOutput'
      */
     this.router.get('/', this.thermometerController.getAllThermometerData);
-    
+
     /**
      * @swagger
      * /thermometer/{id}:
@@ -106,7 +104,7 @@ class ThermometerRoutes {
      *         description: Thermometer data not found
      */
     this.router.get('/:id', this.thermometerController.getThermometerDataById);
-    
+
     /**
      * @swagger
      * /thermometer/device/{deviceId}:
@@ -133,7 +131,7 @@ class ThermometerRoutes {
      *         description: No data found for the device
      */
     this.router.get('/device/:deviceId', this.thermometerController.getThermometerDataByDeviceId);
-    
+
     /**
      * @swagger
      * /thermometer/{id}:
@@ -164,7 +162,7 @@ class ThermometerRoutes {
      *         description: Thermometer data not found
      */
     this.router.put('/:id', this.thermometerController.updateThermometerData);
-    
+
     /**
      * @swagger
      * /thermometer/{id}:
@@ -185,7 +183,7 @@ class ThermometerRoutes {
      *         description: Thermometer data not found
      */
     this.router.delete('/:id', this.thermometerController.deleteThermometerData);
-    
+
     /**
      * @swagger
      * /thermometer/generate-fake-data:

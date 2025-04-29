@@ -8,22 +8,22 @@ const swaggerDefinition: SwaggerDefinition = {
     description: 'API for managing device data',
     contact: {
       name: 'RDI',
-      email: 'test@rdi.com'
-    }
+      email: 'test@rdi.com',
+    },
   },
   servers: [
     {
       url: 'http://localhost:3000/api',
-      description: 'Development server'
-    }
+      description: 'Development server',
+    },
   ],
   components: {
     securitySchemes: {
       bearerAuth: {
         type: 'http',
         scheme: 'bearer',
-        bearerFormat: 'JWT'
-      }
+        bearerFormat: 'JWT',
+      },
     },
     schemas: {
       ThermometerInput: {
@@ -32,40 +32,40 @@ const swaggerDefinition: SwaggerDefinition = {
         properties: {
           deviceId: {
             type: 'string',
-            example: 'DEV-1234'
+            example: 'DEV-1234',
           },
           temperature: {
             type: 'number',
             format: 'float',
-            example: 22.5
+            example: 22.5,
           },
           humidity: {
             type: 'number',
             format: 'float',
             nullable: true,
-            example: 45.0
+            example: 45.0,
           },
           batteryLevel: {
             type: 'number',
             format: 'float',
             minimum: 0,
             maximum: 100,
-            example: 85.0
+            example: 85.0,
           },
           long: {
             type: 'number',
-            example: 23.7356
+            example: 23.7356,
           },
           lat: {
             type: 'number',
-            example: 37.9800
+            example: 37.98,
           },
           recordedAt: {
             type: 'string',
             format: 'date-time',
-            example: '2025-04-25T12:00:00Z'
-          }
-        }
+            example: '2025-04-25T12:00:00Z',
+          },
+        },
       },
       ThermometerOutput: {
         allOf: [
@@ -75,20 +75,20 @@ const swaggerDefinition: SwaggerDefinition = {
             properties: {
               id: {
                 type: 'string',
-                example: '507f1f77bcf86cd799439011'
-              }
+                example: '507f1f77bcf86cd799439011',
+              },
             },
-            required: ['id']
-          }
-        ]
-      }
-    }
-  }
+            required: ['id'],
+          },
+        ],
+      },
+    },
+  },
 };
 
 const options = {
   swaggerDefinition,
-  apis: ['./src/routes/*.ts', './src/interfaces/*.ts']
+  apis: ['./src/routes/*.ts', './src/interfaces/*.ts'],
 };
 
 export default options;

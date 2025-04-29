@@ -4,7 +4,7 @@
     "es2021": true
   },
   "eslint.workingDirectories": [
-    "src"
+    "src/"
   ],
   "extends": [
     "eslint:recommended",
