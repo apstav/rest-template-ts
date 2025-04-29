@@ -1,40 +1,51 @@
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
+import { connectDB } from '../../models';
 
-let client: MongoClient;
-
-export async function connectToTestDB() {
-  client = new MongoClient('mongodb://root:example@mongodb:27017');
-  await client.connect();
-  return client.db('device_db');
-}
-
-export async function disconnectTestDB() {
-  if (client) {
-    await client.close();
-  }
-}
-import { expect } from 'chai';
-import { before, after } from 'node:test';
-
-describe('Database Connection', () => {
-  let client: MongoClient;
-
-  before(async () => {
-    client = new MongoClient('mongodb://root:example@mongodb:27017');
-    await client.connect();
+describe('Database Integration Tests', () => {
+  beforeAll(async () => {
+    await connectDB();
   });
 
-  after(async () => {
-    await client.close();
+  afterAll(async () => {
+    await mongoose.connection.close();
   });
 
-  it('should successfully connect to the database', async () => {
-    try {
-      const db = client.db('device_db'); 
-      const collections = await db.listCollections().toArray();
-      expect(collections).to.be.an('array');
-    } catch (error) {
-      expect.fail('Database connection failed');
+  it('should connect to the database successfully', async () => {
+    expect(mongoose.connection.readyState).toBe(1); // 1 = connected
+  });
+
+  it('should handle invalid database URI gracefully', async () => {
+    const invalidUri = 'mongodb://invalid-uri';
+    await expect(mongoose.connect(invalidUri)).rejects.toThrow();
+  });
+
+  it('should insert a document into the database', async () => {
+    const Thermometer = mongoose.model('Thermometer');
+    const newEntry = new Thermometer({
+      deviceId: 'DEV-1234',
+      temperature: 22.5,
+      humidity: 50.0,
+      batteryLevel: 80.0,
+      lat: 37.9838,
+      long: 23.7275,
+    });
+    const savedEntry = await newEntry.save();
+    expect(savedEntry).toHaveProperty('_id');
+  });
+
+  it('should retrieve documents from the database', async () => {
+    const Thermometer = mongoose.model('Thermometer');
+    const entries = await Thermometer.find();
+    expect(Array.isArray(entries)).toBe(true);
+  });
+
+  it('should delete a document from the database', async () => {
+    const Thermometer = mongoose.model('Thermometer');
+    const entry = await Thermometer.findOne();
+    if (entry) {
+      await Thermometer.deleteOne({ _id: entry._id });
+      const deletedEntry = await Thermometer.findById(entry._id);
+      expect(deletedEntry).toBeNull();
     }
   });
 });

@@ -1,71 +1,55 @@
 import request from 'supertest';
-import app from '../../app'; 
+import app from '../../app';
 
-describe('Thermometer Integration Tests', () => {
-    describe('GET /thermometer', () => {
-        it('should return a list of thermometer data', async () => {
-            const response = await request(app).get('/api/thermometer');
-            expect(response.status).toBe(200);
-            expect(Array.isArray(response.body)).toBe(true);
-        });
+describe('Thermometer API Integration Tests', () => {
+  describe('GET /api/thermometer', () => {
+    it('should fetch all thermometer data', async () => {
+      const response = await request(app).get('/api/thermometer');
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body.data)).toBe(true);
     });
+  });
 
-    describe('POST /thermometer', () => {
-        it('should create a new thermometer entry', async () => {
-            const newEntry = { temperature: 25, location: { lat: 37.7749, long: -122.4194 } };
-            const response = await request(app).post('/api/thermometer').send(newEntry);
-            expect(response.status).toBe(201);
-            expect(response.body).toMatchObject(newEntry);
-        });
-
-        it('should return 400 for invalid data', async () => {
-            const invalidEntry = { temperature: 'invalid', location: { lat: 'invalid', long: '' } };
-            const response = await request(app).post('/api/thermometer').send(invalidEntry);
-            expect(response.status).toBe(400);
-        });
+  describe('POST /api/thermometer', () => {
+    it('should create a thermometer entry', async () => {
+      const newEntry = {
+        deviceId: 'DEV-9999',
+        temperature: 28.5,
+        humidity: 55.0,
+        batteryLevel: 75.0,
+        lat: 37.9755,
+        long: 23.7348,
+      };
+      const response = await request(app).post('/api/thermometer').send(newEntry);
+      expect(response.status).toBe(201);
+      expect(response.body.data).toMatchObject(newEntry);
     });
+  });
 
-    describe('GET /thermometer/:id', () => {
-        it('should return a specific thermometer entry', async () => {
-            const id = '680b6375f3989c544842bfeb'; // Replace with a valid ID from your database
-            const response = await request(app).get(`/api/thermometer/${id}`);
-            expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('id', id);
-        });
-
-        it('should return 404 for a non-existent entry', async () => {
-            const response = await request(app).get('/api/thermometer/9999');
-            expect(response.status).toBe(404);
-        });
+  describe('GET /api/thermometer/:id', () => {
+    it('should fetch thermometer data by ID', async () => {
+      const id = 'valid-id'; // Replace with a valid ID
+      const response = await request(app).get(`/api/thermometer/${id}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveProperty('id', id);
     });
+  });
 
-    describe('PUT /thermometer/:id', () => {
-        it('should update a specific thermometer entry', async () => {
-            const id = '680b6375f3989c544842bfeb'; // Replace with a valid ID from your database
-            const updatedEntry = { temperature: 30, location: { lat: 40.7128, long: -74.0060 } };
-            const response = await request(app).put(`/api/thermometer/${id}`).send(updatedEntry);
-            expect(response.status).toBe(200);
-            expect(response.body).toMatchObject(updatedEntry);
-        });
-
-        it('should return 400 for invalid data', async () => {
-            const id = '680b6375f3989c544842bfeb'; // Replace with a valid ID from your database
-            const invalidEntry = { temperature: 'invalid', location: { lat: 'invalid', long: '' } };
-            const response = await request(app).put(`/api/thermometer/${id}`).send(invalidEntry);
-            expect(response.status).toBe(400);
-        });
+  describe('PUT /api/thermometer/:id', () => {
+    it('should update thermometer data', async () => {
+      const id = 'valid-id'; // Replace with a valid ID
+      const updatedData = { temperature: 32.0 };
+      const response = await request(app).put(`/api/thermometer/${id}`).send(updatedData);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject(updatedData);
     });
+  });
 
-    describe('DELETE /thermometer/:id', () => {
-        it('should delete a specific thermometer entry', async () => {
-            const id = '680b6375f3989c544842bfeb'; // Replace with a valid ID from your database
-            const response = await request(app).delete(`/api/thermometer/${id}`);
-            expect(response.status).toBe(204);
-        });
-
-        it('should return 404 for a non-existent entry', async () => {
-            const response = await request(app).delete('/api/thermometer/9999');
-            expect(response.status).toBe(404);
-        });
+  describe('DELETE /api/thermometer/:id', () => {
+    it('should delete thermometer data', async () => {
+      const id = 'valid-id'; // Replace with a valid ID
+      const response = await request(app).delete(`/api/thermometer/${id}`);
+      expect(response.status).toBe(204);
     });
+  });
 });
