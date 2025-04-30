@@ -1,6 +1,6 @@
 import { Thermometer } from '../models/index';
 import { ThermometerInput, ThermometerOutput } from '../interfaces/index';
-import { faker } from '../utils/index';
+import { faker, logger } from '../utils/index';
 
 class ThermometerService {
   private toOutput(document: any): ThermometerOutput {
@@ -23,8 +23,14 @@ class ThermometerService {
     return documents.map(this.toOutput);
   }
 
+
+  // public async getThermometerDataById(id: string): Promise<ThermometerOutput | null> {
+  //   const document = await Thermometer.findById(id);
+  //   return document ? this.toOutput(document) : null;
+  // }
+
   public async getThermometerDataById(id: string): Promise<ThermometerOutput | null> {
-    const document = await Thermometer.findById(id);
+    const document = await Thermometer.findById({ _id: Object(id) });
     return document ? this.toOutput(document) : null;
   }
 
@@ -34,12 +40,12 @@ class ThermometerService {
   }
 
   public async updateThermometerData(id: string, data: Partial<ThermometerInput>): Promise<ThermometerOutput | null> {
-    const document = await Thermometer.findByIdAndUpdate(id, data, { new: true });
+    const document = await Thermometer.findByIdAndUpdate({ _id: Object(id) }, data, { new: true });
     return document ? this.toOutput(document) : null;
   }
 
   public async deleteThermometerData(id: string): Promise<ThermometerOutput | null> {
-    const document = await Thermometer.findByIdAndDelete(id);
+    const document = await Thermometer.findByIdAndDelete({ _id: Object(id) });
     return document ? this.toOutput(document) : null;
   }
 

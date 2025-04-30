@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { ThermometerService } from '../services/index';
 import { ThermometerInput } from '../interfaces/index';
 import { logger, BadRequestError, NotFoundError, BaseError } from '../utils/index';
+import { createThermometerSchema, updateThermometerSchema, idParamSchema } from '../utils/thermometer.validator';
+import Joi from 'joi';
 
 class ThermometerController {
   private readonly service: ThermometerService = new ThermometerService();
@@ -22,12 +24,19 @@ class ThermometerController {
     }
   }
 
-  public createThermometerData = async (req: Request, res: Response): Promise<void> => {
-    const data: ThermometerInput = req.body;
+  private validate(schema: Joi.Schema, data: any): void {
+    const { error } = schema.validate(data);
+    if (error) {
+      throw new BadRequestError(error.details[0].message);
+    }
+  }
 
+  public createThermometerData = async (req: Request, res: Response): Promise<void> => {
     try {
-      logger.info('Creating new thermometer data', { data });
-      const newData = await this.service.createThermometerData(data);
+      this.validate(createThermometerSchema, req.body);
+
+      logger.info('Creating new thermometer data', { data: req.body });
+      const newData = await this.service.createThermometerData(req.body);
 
       logger.info('Successfully created thermometer data', { id: newData.id });
       res.status(201).json({
@@ -100,59 +109,48 @@ class ThermometerController {
   };
 
   public updateThermometerData = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const updateData: Partial<ThermometerInput> = req.body;
-
     try {
-      logger.info(`Updating thermometer data for ID: ${id}`, { updateData });
+      this.validate(idParamSchema, req.params);
+      this.validate(updateThermometerSchema, req.body);
 
-      if (Object.keys(updateData).length === 0) {
-        throw new BadRequestError('No update data provided');
-      }
+      const { id } = req.params;
+      logger.info(`Updating thermometer data for ID: ${id}`, { updateData: req.body });
 
-      const result = await this.service.updateThermometerData(id, updateData);
+      const result = await this.service.updateThermometerData(id, req.body);
 
-      if (!result || result.count === 0) {
-        logger.warn(`No data updated for ID: ${id}`);
+      if (!result) {
         throw new NotFoundError(`Thermometer data with ID ${id} not found`);
       }
 
-      logger.info(`Successfully updated data for ID: ${id}`, {
-        updatedFields: Object.keys(updateData),
-      });
-
+      logger.info(`Successfully updated data for ID: ${id}`);
       res.status(200).json({
         success: true,
         message: 'Data updated successfully',
         updatedId: id,
-        updatedFields: Object.keys(updateData),
       });
     } catch (error) {
-      logger.error(`Failed to update data for ID: ${id}`, { error, updateData });
+      logger.error('Failed to update thermometer data', { error });
       this.handleError(res, error as Error);
     }
   };
 
   public deleteThermometerData = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-
     try {
+      this.validate(idParamSchema, req.params);
+
+      const { id } = req.params;
       logger.info(`Deleting thermometer data for ID: ${id}`);
+
       const result = await this.service.deleteThermometerData(id);
 
-      if (!result || result.count === 0) {
-        logger.warn(`No data deleted for ID: ${id}`);
+      if (!result) {
         throw new NotFoundError(`Thermometer data with ID ${id} not found`);
       }
 
       logger.info(`Successfully deleted data for ID: ${id}`);
-      res.status(200).json({
-        success: true,
-        message: 'Data deleted successfully',
-        deletedId: id,
-      });
+      res.status(204).send();
     } catch (error) {
-      logger.error(`Failed to delete data for ID: ${id}`, { error });
+      logger.error('Failed to delete thermometer data', { error });
       this.handleError(res, error as Error);
     }
   };
