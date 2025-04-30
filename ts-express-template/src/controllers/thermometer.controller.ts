@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ThermometerService } from '../services/index';
 import { ThermometerInput } from '../interfaces/index';
 import { logger, BadRequestError, NotFoundError, BaseError } from '../utils/index';
@@ -31,7 +31,7 @@ class ThermometerController {
     }
   }
 
-  public createThermometerData = async (req: Request, res: Response): Promise<void> => {
+  public createThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       this.validate(createThermometerSchema, req.body);
 
@@ -44,12 +44,11 @@ class ThermometerController {
         data: newData,
       });
     } catch (error) {
-      logger.error('Failed to create thermometer data', { error });
-      this.handleError(res, error as Error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public getAllThermometerData = async (_req: Request, res: Response): Promise<void> => {
+  public getAllThermometerData = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       logger.info('Fetching all thermometer data');
       const data = await this.service.getAllThermometerData();
@@ -61,12 +60,11 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      logger.error('Failed to fetch thermometer data', { error });
-      this.handleError(res, error as Error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public getThermometerDataById = async (req: Request, res: Response): Promise<void> => {
+  public getThermometerDataById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
 
     try {
@@ -84,12 +82,11 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      logger.error(`Failed to fetch data for ID: ${id}`, { error });
-      this.handleError(res, error as Error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public getThermometerDataByDeviceId = async (req: Request, res: Response): Promise<void> => {
+  public getThermometerDataByDeviceId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { deviceId } = req.params;
 
     try {
@@ -103,12 +100,11 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      logger.error(`Failed to fetch data for device ID: ${deviceId}`, { error });
-      this.handleError(res, error as Error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public updateThermometerData = async (req: Request, res: Response): Promise<void> => {
+  public updateThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       this.validate(idParamSchema, req.params);
       this.validate(updateThermometerSchema, req.body);
@@ -129,12 +125,11 @@ class ThermometerController {
         updatedId: id,
       });
     } catch (error) {
-      logger.error('Failed to update thermometer data', { error });
-      this.handleError(res, error as Error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public deleteThermometerData = async (req: Request, res: Response): Promise<void> => {
+  public deleteThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       this.validate(idParamSchema, req.params);
 
@@ -150,12 +145,11 @@ class ThermometerController {
       logger.info(`Successfully deleted data for ID: ${id}`);
       res.status(204).send();
     } catch (error) {
-      logger.error('Failed to delete thermometer data', { error });
-      this.handleError(res, error as Error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public generateFakeData = async (req: Request, res: Response): Promise<void> => {
+  public generateFakeData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const count = parseInt(req.query.count as string) || 10;
 
     try {
@@ -173,8 +167,7 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      logger.error('Failed to generate fake data', { error, requestedCount: count });
-      this.handleError(res, error as Error);
+      next(error); // Pass the error to the error middleware
     }
   };
 }
