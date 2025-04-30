@@ -28,7 +28,7 @@ describe('Thermometer API Integration Tests', () => {
 
   describe('GET /api/thermometer/:id', () => {
     it('should fetch thermometer data by ID', async () => {
-      const id = 'valid-id'; // Replace with a valid ID
+      const id = '68121000732466059eba4961'; // Replace with a valid ID
       const response = await request(app).get(`/api/thermometer/${id}`);
       expect(response.status).toBe(200);
       expect(response.body.data).toHaveProperty('id', id);
@@ -37,7 +37,7 @@ describe('Thermometer API Integration Tests', () => {
 
   describe('PUT /api/thermometer/:id', () => {
     it('should update thermometer data', async () => {
-      const id = 'valid-id'; // Replace with a valid ID
+      const id = '68121000732466059eba4961'; // Replace with a valid ID
       const updatedData = { temperature: 32.0 };
       const response = await request(app).put(`/api/thermometer/${id}`).send(updatedData);
       expect(response.status).toBe(200);
@@ -47,7 +47,7 @@ describe('Thermometer API Integration Tests', () => {
 
   describe('DELETE /api/thermometer/:id', () => {
     it('should delete thermometer data', async () => {
-      const id = 'valid-id'; // Replace with a valid ID
+      const id = '68121000732466059eba4961'; // Replace with a valid ID
       const response = await request(app).delete(`/api/thermometer/${id}`);
       expect(response.status).toBe(204);
     });
