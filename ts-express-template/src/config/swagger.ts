@@ -3,27 +3,27 @@ import { SwaggerDefinition } from 'swagger-jsdoc';
 const swaggerDefinition: SwaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'Thermometer API Documentation',
+    title: 'Devices API Documentation',
     version: '1.0.0',
-    description: 'API for managing thermometer device data',
+    description: 'API for managing device data',
     contact: {
-      name: 'Your Name',
-      email: 'your.email@example.com'
-    }
+      name: 'RDI',
+      email: 'test@rdi.com',
+    },
   },
   servers: [
     {
       url: 'http://localhost:3000/api',
-      description: 'Development server'
-    }
+      description: 'Development server',
+    },
   ],
   components: {
     securitySchemes: {
       bearerAuth: {
         type: 'http',
         scheme: 'bearer',
-        bearerFormat: 'JWT'
-      }
+        bearerFormat: 'JWT',
+      },
     },
     schemas: {
       ThermometerInput: {
@@ -32,40 +32,40 @@ const swaggerDefinition: SwaggerDefinition = {
         properties: {
           deviceId: {
             type: 'string',
-            example: 'DEV-1234'
+            example: 'DEV-1234',
           },
           temperature: {
             type: 'number',
             format: 'float',
-            example: 22.5
+            example: 22.5,
           },
           humidity: {
             type: 'number',
             format: 'float',
             nullable: true,
-            example: 45.0
+            example: 45.0,
           },
           batteryLevel: {
             type: 'number',
             format: 'float',
             minimum: 0,
             maximum: 100,
-            example: 85.0
+            example: 85.0,
           },
           long: {
             type: 'number',
-            example: 23.7356
+            example: 23.7356,
           },
           lat: {
             type: 'number',
-            example: 37.9800
+            example: 37.98,
           },
           recordedAt: {
             type: 'string',
             format: 'date-time',
-            example: '2025-04-25T12:00:00Z'
-          }
-        }
+            example: '2025-04-25T12:00:00Z',
+          },
+        },
       },
       ThermometerOutput: {
         allOf: [
@@ -75,20 +75,54 @@ const swaggerDefinition: SwaggerDefinition = {
             properties: {
               id: {
                 type: 'string',
-                example: '507f1f77bcf86cd799439011'
-              }
+                example: '507f1f77bcf86cd799439011',
+              },
             },
-            required: ['id']
-          }
-        ]
-      }
-    }
-  }
+            required: ['id'],
+          },
+        ],
+      },
+      ThermometerUpdateInput: {
+        type: 'object',
+        properties: {
+          temperature: {
+            type: 'number',
+            format: 'float',
+            example: 22.5,
+          },
+          humidity: {
+            type: 'number',
+            format: 'float',
+            nullable: true,
+            minimum: 0,
+            maximum: 100,
+            example: 45.0,
+          },
+          batteryLevel: {
+            type: 'number',
+            format: 'float',
+            minimum: 0,
+            maximum: 100,
+            example: 85.0,
+          },
+          long: {
+            type: 'number',
+            example: 23.7356,
+          },
+          lat: {
+            type: 'number',
+            example: 37.98,
+          },
+        },
+        required: [], // No required fields for updates
+      },
+    },
+  },
 };
 
 const options = {
   swaggerDefinition,
-  apis: ['./src/routes/*.ts', './src/interfaces/*.ts']
+  apis: ['./src/routes/*.ts', './src/interfaces/*.ts'],
 };
 
 export default options;

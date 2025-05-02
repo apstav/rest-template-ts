@@ -9,6 +9,7 @@ interface ThermometerInput {
 }
 
 interface ThermometerOutput extends Omit<ThermometerInput, 'id'> {
+  count: number;
   id: string;
   recordedAt: Date;
 }

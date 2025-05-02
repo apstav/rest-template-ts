@@ -1,107 +1,177 @@
-import { Request, Response } from 'express';
-import ThermometerService from '../services/thermometer.service';
-import { ThermometerInput, ThermometerOutput } from '../interfaces/thermometer.interface';
-import { logger } from '../utils/logger';
+import { Request, Response, NextFunction } from 'express';
+import { ThermometerService } from '../services/index';
+import { ThermometerInput } from '../interfaces/index';
+import { logger, BadRequestError, NotFoundError, BaseError } from '../utils/index';
+import { createThermometerSchema, updateThermometerSchema, idParamSchema } from '../utils/thermometer.validator';
+import Joi from 'joi';
+import { Logger } from 'winston';
 
 class ThermometerController {
-  public thermometerService = new ThermometerService();
+  private readonly service: ThermometerService = new ThermometerService();
 
-  private handleError(res: Response, error: unknown): void {
-    if (error instanceof Error) {
-      logger.error(error.message);
-      res.status(500).json({ message: error.message });
+  private handleError(res: Response, error: Error): void {
+    if (error instanceof BaseError) {
+      logger.error(`[${error.name}] ${error.message}`, { stack: error.stack });
+      res.status(error.statusCode).json({
+        success: false,
+        error: error.message,
+      });
     } else {
-      logger.error('An unknown error occurred');
-      res.status(500).json({ message: 'An unknown error occurred' });
+      logger.error(`[UnexpectedError] ${error.message}`, { stack: error.stack });
+      res.status(500).json({
+        success: false,
+        error: 'An unexpected error occurred',
+      });
     }
   }
 
-  public createThermometerData = async (req: Request, res: Response): Promise<void> => {
+  private validate(schema: Joi.Schema, data: any): void {
+    const { error } = schema.validate(data);
+    if (error) {
+      throw new BadRequestError(error.details[0].message);
+    }
+  }
+
+  public createThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const data: ThermometerInput = req.body;
-      const newData = await this.thermometerService.createThermometerData(data);
-      res.status(201).json(newData);
+      this.validate(createThermometerSchema, req.body);
+
+      logger.info('Creating new thermometer data', { data: req.body });
+      const newData = await this.service.createThermometerData(req.body);
+
+      logger.info('Successfully created thermometer data', { id: newData.id });
+      res.status(201).json({
+        success: true,
+        data: newData,
+      });
     } catch (error) {
-      this.handleError(res, error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public getAllThermometerData = async (req: Request, res: Response): Promise<void> => {
+  public getAllThermometerData = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const data = await this.thermometerService.getAllThermometerData();
-      res.status(200).json(data);
+      logger.info('Fetching all thermometer data');
+      const data = await this.service.getAllThermometerData();
+
+      logger.info(`Successfully fetched ${data.length} records`);
+      res.status(200).json({
+        success: true,
+        count: data.length,
+        data,
+      });
     } catch (error) {
-      this.handleError(res, error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public getThermometerDataById = async (req: Request, res: Response): Promise<void> => {
+  public getThermometerDataById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+
     try {
-      const id = req.params.id;
-      const data = await this.thermometerService.getThermometerDataById(id);
-      if (data) {
-        res.status(200).json(data);
-      } else {
-        res.status(404).json({ message: 'Data not found' });
+      logger.info(`Fetching thermometer data by ID: ${id}`);
+      const data = await this.service.getThermometerDataById(id);
+
+      if (!data) {
+        logger.warn(`No data found for ID: ${id}`);
+        throw new NotFoundError(`Thermometer data with ID ${id} not found`);
       }
+
+      logger.info(`Successfully fetched data for ID: ${id}`);
+      res.status(200).json({
+        success: true,
+        data,
+      });
     } catch (error) {
-      this.handleError(res, error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public getThermometerDataByDeviceId = async (req: Request, res: Response): Promise<void> => {
+  public getThermometerDataByDeviceId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { deviceId } = req.params;
+
     try {
-      const deviceId = req.params.deviceId;
-      const data = await this.thermometerService.getThermometerDataByDeviceId(deviceId);
-      res.status(200).json(data);
+      logger.info(`Fetching thermometer data for device ID: ${deviceId}`);
+      const data = await this.service.getThermometerDataByDeviceId(deviceId);
+      if (!data || data.length === 0) {
+        throw new NotFoundError(`Thermometer data with ID ${deviceId} not found`);
+      }
+      logger.info(`Found ${data.length} records for device ID: ${deviceId}`);
+      res.status(200).json({
+        success: true,
+        count: data.length,
+        data,
+      });
     } catch (error) {
-      this.handleError(res, error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public updateThermometerData = async (req: Request, res: Response): Promise<void> => {
+  public updateThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = req.params.id;
-      const data: Partial<ThermometerInput> = req.body;
-      const updatedCount = await this.thermometerService.updateThermometerData(id, data);
-      //if (updatedCount[0] > 0) {
-        res.status(200).json({ message: 'Data updated successfully' });
-      //} else {
-        res.status(404).json({ message: 'Data not found' });
-      //}
+      this.validate(idParamSchema, req.params);
+      this.validate(updateThermometerSchema, req.body);
+
+      const { id } = req.params;
+      logger.info(`Updating thermometer data for ID: ${id}`, { updateData: req.body });
+
+      const result = await this.service.updateThermometerData(id, req.body);
+      if (!result) {
+        throw new NotFoundError(`Thermometer data with ID ${id} not found`);
+      }
+      
+      logger.info(`Successfully updated data for ID: ${id}`);
+      res.status(200).json({
+        success: true,
+        message: 'Data updated successfully',
+        updatedId: id,
+      });
     } catch (error) {
-      this.handleError(res, error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public deleteThermometerData = async (req: Request, res: Response): Promise<void> => {
+  public deleteThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = req.params.id;
-      const deletedCount = await this.thermometerService.deleteThermometerData(id);
-      //if (deletedCount > 0) {
-        res.status(200).json({ message: 'Data deleted successfully' });
-      //} else {
-        //res.status(404).json({ message: 'Data not found' });
-      //}
+      this.validate(idParamSchema, req.params);
+
+      const { id } = req.params;
+      logger.info(`Deleting thermometer data for ID: ${id}`);
+
+      const result = await this.service.deleteThermometerData(id);
+      
+      if (!result) {
+        throw new NotFoundError(`Thermometer data with ID ${id} not found`);
+      }
+
+      logger.info(`Successfully deleted data for ID: ${id}`);
+      res.status(200).send();
     } catch (error) {
-      this.handleError(res, error);
+      next(error); // Pass the error to the error middleware
     }
   };
 
-  public generateFakeData = async (req: Request, res: Response): Promise<void> => {
+  public generateFakeData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const count = parseInt(req.query.count as string) || 10;
+
     try {
-      const count = parseInt(req.query.count as string) || 10;
       if (isNaN(count) || count < 1 || count > 100) {
-        res.status(400).json({ message: 'Count must be between 1 and 100' });
-        return;
+        throw new BadRequestError('Count must be between 1 and 100');
       }
-      const data = await this.thermometerService.generateFakeData(count);
-      res.status(201).json(data);
+
+      logger.info(`Generating ${count} fake data entries`);
+      const data = await this.service.generateFakeData(count);
+
+      logger.info(`Successfully generated ${data.length} fake entries`);
+      res.status(201).json({
+        success: true,
+        count: data.length,
+        data,
+      });
     } catch (error) {
-      this.handleError(res, error);
+      next(error); // Pass the error to the error middleware
     }
   };
 }
-
 
 export default ThermometerController;
