@@ -4,6 +4,7 @@ import { ThermometerInput } from '../interfaces/index';
 import { logger, BadRequestError, NotFoundError, BaseError } from '../utils/index';
 import { createThermometerSchema, updateThermometerSchema, idParamSchema } from '../utils/thermometer.validator';
 import Joi from 'joi';
+import { Logger } from 'winston';
 
 class ThermometerController {
   private readonly service: ThermometerService = new ThermometerService();
@@ -92,7 +93,9 @@ class ThermometerController {
     try {
       logger.info(`Fetching thermometer data for device ID: ${deviceId}`);
       const data = await this.service.getThermometerDataByDeviceId(deviceId);
-
+      if (!data || data.length === 0) {
+        throw new NotFoundError(`Thermometer data with ID ${deviceId} not found`);
+      }
       logger.info(`Found ${data.length} records for device ID: ${deviceId}`);
       res.status(200).json({
         success: true,
@@ -113,11 +116,10 @@ class ThermometerController {
       logger.info(`Updating thermometer data for ID: ${id}`, { updateData: req.body });
 
       const result = await this.service.updateThermometerData(id, req.body);
-
       if (!result) {
         throw new NotFoundError(`Thermometer data with ID ${id} not found`);
       }
-
+      
       logger.info(`Successfully updated data for ID: ${id}`);
       res.status(200).json({
         success: true,
@@ -137,13 +139,13 @@ class ThermometerController {
       logger.info(`Deleting thermometer data for ID: ${id}`);
 
       const result = await this.service.deleteThermometerData(id);
-
+      
       if (!result) {
         throw new NotFoundError(`Thermometer data with ID ${id} not found`);
       }
 
       logger.info(`Successfully deleted data for ID: ${id}`);
-      res.status(204).send();
+      res.status(200).send();
     } catch (error) {
       next(error); // Pass the error to the error middleware
     }

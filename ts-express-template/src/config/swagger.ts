@@ -82,6 +82,40 @@ const swaggerDefinition: SwaggerDefinition = {
           },
         ],
       },
+      ThermometerUpdateInput: {
+        type: 'object',
+        properties: {
+          temperature: {
+            type: 'number',
+            format: 'float',
+            example: 22.5,
+          },
+          humidity: {
+            type: 'number',
+            format: 'float',
+            nullable: true,
+            minimum: 0,
+            maximum: 100,
+            example: 45.0,
+          },
+          batteryLevel: {
+            type: 'number',
+            format: 'float',
+            minimum: 0,
+            maximum: 100,
+            example: 85.0,
+          },
+          long: {
+            type: 'number',
+            example: 23.7356,
+          },
+          lat: {
+            type: 'number',
+            example: 37.98,
+          },
+        },
+        required: [], // No required fields for updates
+      },
     },
   },
 };

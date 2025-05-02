@@ -49,7 +49,7 @@ describe('Thermometer API Integration Tests', () => {
     it('should delete thermometer data', async () => {
       const id = '68121000732466059eba4961'; // Replace with a valid ID
       const response = await request(app).delete(`/api/thermometer/${id}`);
-      expect(response.status).toBe(204);
+      expect(response.status).toBe(200);
     });
   });
 });

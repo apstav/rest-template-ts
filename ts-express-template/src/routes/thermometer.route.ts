@@ -133,34 +133,34 @@ class ThermometerRoutes {
     this.router.get('/device/:deviceId', this.thermometerController.getThermometerDataByDeviceId);
 
     /**
-     * @swagger
-     * /thermometer/{id}:
-     *   put:
-     *     summary: Update thermometer data
-     *     tags: [Thermometer]
-     *     parameters:
-     *       - in: path
-     *         name: id
-     *         schema:
-     *           type: string
-     *         required: true
-     *         description: Thermometer data ID
-     *     requestBody:
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             $ref: '#/components/schemas/ThermometerInput'
-     *     responses:
-     *       200:
-     *         description: Updated thermometer data
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/ThermometerOutput'
-     *       404:
-     *         description: Thermometer data not found
-     */
+ * @swagger
+ * /thermometer/{id}:
+ *   put:
+ *     summary: Update thermometer data
+ *     tags: [Thermometer]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Thermometer data ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ThermometerUpdateInput'
+ *     responses:
+ *       200:
+ *         description: Updated thermometer data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ThermometerOutput'
+ *       404:
+ *         description: Thermometer data not found
+ */
     this.router.put('/:id', this.thermometerController.updateThermometerData);
 
     /**
