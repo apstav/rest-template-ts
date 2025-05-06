@@ -9,22 +9,6 @@ import { Logger } from 'winston';
 class ThermometerController {
   private readonly service: ThermometerService = new ThermometerService();
 
-  private handleError(res: Response, error: Error): void {
-    if (error instanceof BaseError) {
-      logger.error(`[${error.name}] ${error.message}`, { stack: error.stack });
-      res.status(error.statusCode).json({
-        success: false,
-        error: error.message,
-      });
-    } else {
-      logger.error(`[UnexpectedError] ${error.message}`, { stack: error.stack });
-      res.status(500).json({
-        success: false,
-        error: 'An unexpected error occurred',
-      });
-    }
-  }
-
   private validate(schema: Joi.Schema, data: any): void {
     const { error } = schema.validate(data);
     if (error) {
@@ -45,7 +29,7 @@ class ThermometerController {
         data: newData,
       });
     } catch (error) {
-      next(error); // Pass the error to the error middleware
+      next(error); 
     }
   };
 
@@ -61,7 +45,7 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      next(error); // Pass the error to the error middleware
+      next(error); 
     }
   };
 
@@ -83,7 +67,7 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      next(error); // Pass the error to the error middleware
+      next(error); 
     }
   };
 
@@ -103,7 +87,7 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      next(error); // Pass the error to the error middleware
+      next(error); 
     }
   };
 
@@ -127,7 +111,7 @@ class ThermometerController {
         updatedId: id,
       });
     } catch (error) {
-      next(error); // Pass the error to the error middleware
+      next(error);
     }
   };
 
@@ -147,7 +131,7 @@ class ThermometerController {
       logger.info(`Successfully deleted data for ID: ${id}`);
       res.status(200).send();
     } catch (error) {
-      next(error); // Pass the error to the error middleware
+      next(error);
     }
   };
 
@@ -169,7 +153,7 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      next(error); // Pass the error to the error middleware
+      next(error);
     }
   };
 }
