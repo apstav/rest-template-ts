@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import ThermometerController from '../controllers/thermometer.controller';
+import { ServiceFactory } from '../services/factory';
 
 /**
  * @swagger
@@ -9,31 +9,9 @@ import ThermometerController from '../controllers/thermometer.controller';
  */
 class ThermometerRoutes {
   public router = Router();
-  public thermometerController = new ThermometerController();
+  private thermometerFacade = ServiceFactory.createThermometerFacade();
 
   constructor() {
-    /**
-     * @swagger
-     * /thermometer:
-     *   post:
-     *     summary: Create new thermometer data
-     *     tags: [Thermometer]
-     *     requestBody:
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             $ref: '#/components/schemas/ThermometerInput'
-     *     responses:
-     *       201:
-     *         description: Created thermometer data
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/ThermometerOutput'
-     *       500:
-     *         description: Server error
-     */
     this.initializeRoutes();
   }
 
@@ -57,10 +35,13 @@ class ThermometerRoutes {
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/ThermometerOutput'
-     *       500:
-     *         description: Server error
      */
-    this.router.post('/', this.thermometerController.createThermometerData);
+    this.router.post('/', (req, res, next) => {
+      this.thermometerFacade
+        .createThermometer(req.body)
+        .then((data) => res.status(201).json({ success: true, data }))
+        .catch(next);
+    });
 
     /**
      * @swagger
@@ -78,7 +59,12 @@ class ThermometerRoutes {
      *               items:
      *                 $ref: '#/components/schemas/ThermometerOutput'
      */
-    this.router.get('/', this.thermometerController.getAllThermometerData);
+    this.router.get('/', (_req, res, next) => {
+      this.thermometerFacade
+        .getAllThermometers()
+        .then((data) => res.status(200).json({ success: true, data }))
+        .catch(next);
+    });
 
     /**
      * @swagger
@@ -99,11 +85,20 @@ class ThermometerRoutes {
      *         content:
      *           application/json:
      *             schema:
-     *               $ref: '#/components/schemas/TermometerOutput'
-     *       404:
-     *         description: Thermometer data not found
+     *               $ref: '#/components/schemas/ThermometerOutput'
      */
-    this.router.get('/:id', this.thermometerController.getThermometerDataById);
+    this.router.get('/:id', (req, res, next) => {
+      this.thermometerFacade
+        .getThermometerById(req.params.id)
+        .then((data) => {
+          if (!data) {
+            res.status(404).json({ success: false, message: 'Thermometer data not found' });
+          } else {
+            res.status(200).json({ success: true, data });
+          }
+        })
+        .catch(next);
+    });
 
     /**
      * @swagger
@@ -121,47 +116,46 @@ class ThermometerRoutes {
      *     responses:
      *       200:
      *         description: Thermometer data for the device
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                 $ref: '#/components/schemas/ThermometerOutput'
-     *       404:
-     *         description: No data found for the device
      */
-    this.router.get('/device/:deviceId', this.thermometerController.getThermometerDataByDeviceId);
+    this.router.get('/device/:deviceId', (req, res, next) => {
+      this.thermometerFacade
+        .getThermometerByDeviceId(req.params.deviceId)
+        .then((data) => {
+          if (!data) {
+            res.status(404).json({ success: false, message: 'No data found for the device' });
+          } else {
+            res.status(200).json({ success: true, data });
+          }
+        })
+        .catch(next);
+    });
 
     /**
- * @swagger
- * /thermometer/{id}:
- *   put:
- *     summary: Update thermometer data
- *     tags: [Thermometer]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: Thermometer data ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ThermometerUpdateInput'
- *     responses:
- *       200:
- *         description: Updated thermometer data
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ThermometerOutput'
- *       404:
- *         description: Thermometer data not found
- */
-    this.router.put('/:id', this.thermometerController.updateThermometerData);
+     * @swagger
+     * /thermometer/{id}:
+     *   put:
+     *     summary: Update thermometer data
+     *     tags: [Thermometer]
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         schema:
+     *           type: string
+     *         required: true
+     *         description: Thermometer data ID
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/ThermometerUpdateInput'
+     */
+    this.router.put('/:id', (req, res, next) => {
+      this.thermometerFacade
+        .updateThermometer(req.params.id, req.body)
+        .then((data) => res.status(200).json({ success: true, data }))
+        .catch(next);
+    });
 
     /**
      * @swagger
@@ -176,13 +170,13 @@ class ThermometerRoutes {
      *           type: string
      *         required: true
      *         description: Thermometer data ID
-     *     responses:
-     *       200:
-     *         description: Deleted successfully
-     *       404:
-     *         description: Thermometer data not found
      */
-    this.router.delete('/:id', this.thermometerController.deleteThermometerData);
+    this.router.delete('/:id', (req, res, next) => {
+      this.thermometerFacade
+        .deleteThermometer(req.params.id)
+        .then(() => res.status(200).json({ success: true, message: 'Deleted successfully' }))
+        .catch(next);
+    });
 
     /**
      * @swagger
@@ -190,11 +184,13 @@ class ThermometerRoutes {
      *   post:
      *     summary: Generate fake thermometer data
      *     tags: [Thermometer]
-     *     responses:
-     *       200:
-     *         description: Fake thermometer data generated
      */
-    this.router.post('/generate-fake-data', this.thermometerController.generateFakeData);
+    this.router.post('/generate-fake-data', (_req, res, next) => {
+      this.thermometerFacade
+        .generateFakeData()
+        .then((data) => res.status(200).json({ success: true, data }))
+        .catch(next);
+    });
   }
 }
 
