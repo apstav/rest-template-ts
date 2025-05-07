@@ -1,6 +1,6 @@
-import { client } from '../models/index';
+import { client } from '../config/config'; 
 import { ThermometerInput, ThermometerOutput } from '../interfaces/index';
-import { ObjectId } from 'mongodb'; // Import ObjectId from mongodb
+import { ObjectId } from 'mongodb';
 
 
 
