@@ -1,9 +1,8 @@
-import mongoose from 'mongoose';
-import { config } from '../config/config';
-import Thermometer from './thermometer.model';
+import { client } from '../config/config';
+
 const connectDB = async () => {
   try {
-    await mongoose.connect(config.db.uri, config.db.options);
+    await client.connect();
     console.log('MongoDB connected');
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -11,4 +10,4 @@ const connectDB = async () => {
   }
 };
 
-export { mongoose, connectDB, Thermometer };
+export { connectDB, client };
