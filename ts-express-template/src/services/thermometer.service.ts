@@ -27,6 +27,29 @@ class ThermometerService {
     return documents.map(this.toOutput);
   }
 
+  public async getLatestThermometerDataByDeviceId(deviceId: string): Promise<ThermometerOutput | null> {
+  const document = await this.collection
+    .find({ deviceId })
+    .sort({ recordedAt: -1 })
+    .limit(1)
+    .next();
+  return document ? this.toOutput(document) : null;
+  }
+
+  public async getThermometerDataByDeviceIdAndTimeRange(
+    deviceId: string,
+    startTime: Date,
+    endTime: Date
+  ): Promise<ThermometerOutput[]> {
+    const documents = await this.collection
+      .find({
+        deviceId,
+        recordedAt: { $gte: startTime, $lte: endTime },
+      })
+      .toArray();
+    return documents.map(this.toOutput);
+  }
+
   public async createThermometerData(data: ThermometerInput): Promise<ThermometerOutput> {
     const result = await this.collection.insertOne(data);
     return this.toOutput({ _id: result.insertedId, ...data });

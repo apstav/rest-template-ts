@@ -91,6 +91,52 @@ class ThermometerController {
     }
   };
 
+  public getLatestThermometerDataByDeviceId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const { deviceId } = req.params;
+
+  try {
+    logger.info(`Fetching latest thermometer data for device ID: ${deviceId}`);
+    const data = await this.service.getLatestThermometerDataByDeviceId(deviceId);
+
+    if (!data) {
+      throw new NotFoundError(`No data found for device ID ${deviceId}`);
+    }
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+    } catch (error) {
+    next(error);
+    }
+  };
+
+  public getThermometerDataByDeviceIdAndTimeRange = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { deviceId } = req.params;
+    const { startTime, endTime } = req.query;
+
+    if (!deviceId || !startTime || !endTime) {
+      res.status(400).json({ message: 'Missing required parameters: deviceId, startTime, or endTime' });
+      return;
+    }
+
+    const start = new Date(startTime as string);
+    const end = new Date(endTime as string);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      res.status(400).json({ message: 'Invalid date format for startTime or endTime' });
+      return;
+    }
+
+    const data = await this.service.getThermometerDataByDeviceIdAndTimeRange(deviceId, start, end);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
   public updateThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       this.validate(idParamSchema, req.params);

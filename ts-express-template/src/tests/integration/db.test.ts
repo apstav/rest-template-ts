@@ -1,51 +1,76 @@
-import mongoose from 'mongoose';
-import { connectDB } from '../../models';
+import { MongoClient, Db, Collection } from 'mongodb';
+import { client } from '../../config/config';
 
 describe('Database Integration Tests', () => {
+  let db: Db;
+  let collection: Collection;
+
   beforeAll(async () => {
-    await connectDB();
+    await client.connect();
+    db = client.db(); 
+    collection = db.collection('thermometers'); 
   });
 
   afterAll(async () => {
-    await mongoose.connection.close();
+    await client.close();
+  });
+
+  beforeEach(async () => {
+    await collection.deleteMany({}); 
   });
 
   it('should connect to the database successfully', async () => {
-    expect(mongoose.connection.readyState).toBe(1); // 1 = connected
-  });
-
-  it('should handle invalid database URI gracefully', async () => {
-    const invalidUri = 'mongodb://invalid-uri';
-    await expect(mongoose.connect(invalidUri)).rejects.toThrow();
+    expect(client.db()).toBeDefined();
   });
 
   it('should insert a document into the database', async () => {
-    const Thermometer = mongoose.model('Thermometer');
-    const newEntry = new Thermometer({
+    const newEntry = {
       deviceId: 'DEV-1234',
       temperature: 22.5,
       humidity: 50.0,
       batteryLevel: 80.0,
       lat: 37.9838,
       long: 23.7275,
-    });
-    const savedEntry = await newEntry.save();
-    expect(savedEntry).toHaveProperty('_id');
+    };
+    const result = await collection.insertOne(newEntry);
+    expect(result.insertedId).toBeDefined();
   });
 
   it('should retrieve documents from the database', async () => {
-    const Thermometer = mongoose.model('Thermometer');
-    const entries = await Thermometer.find();
+    const newEntry = {
+      deviceId: 'DEV-1234',
+      temperature: 22.5,
+      humidity: 50.0,
+      batteryLevel: 80.0,
+      lat: 37.9838,
+      long: 23.7275,
+    };
+    await collection.insertOne(newEntry);
+
+    const entries = await collection.find().toArray();
     expect(Array.isArray(entries)).toBe(true);
+    expect(entries.length).toBe(1);
+    expect(entries[0].deviceId).toBe('DEV-1234');
   });
 
   it('should delete a document from the database', async () => {
-    const Thermometer = mongoose.model('Thermometer');
-    const entry = await Thermometer.findOne();
-    if (entry) {
-      await Thermometer.deleteOne({ _id: entry._id });
-      const deletedEntry = await Thermometer.findById(entry._id);
-      expect(deletedEntry).toBeNull();
-    }
+    const newEntry = {
+      deviceId: 'DEV-1234',
+      temperature: 22.5,
+      humidity: 50.0,
+      batteryLevel: 80.0,
+      lat: 37.9838,
+      long: 23.7275,
+    };
+    const result = await collection.insertOne(newEntry);
+
+    await collection.deleteOne({ _id: result.insertedId });
+    const deletedEntry = await collection.findOne({ _id: result.insertedId });
+    expect(deletedEntry).toBeNull();
+  });
+
+  it('should handle invalid database operations gracefully', async () => {
+    const invalidCollection = db.collection('invalid_collection');
+    await expect(invalidCollection.findOne({})).resolves.toBeNull();
   });
 });

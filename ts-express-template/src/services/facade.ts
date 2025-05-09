@@ -20,6 +20,18 @@ export class ThermometerFacade {
     return this.thermometerService.getThermometerDataById(id);
   }
 
+  public async getLatestThermometerDataByDeviceId(deviceId: string): Promise<ThermometerOutput | null> {
+  return this.thermometerService.getLatestThermometerDataByDeviceId(deviceId);
+  }
+
+  public async getThermometerByDeviceIdAndTimeRange(
+    deviceId: string,
+    startTime: Date,
+    endTime: Date
+  ): Promise<ThermometerOutput[]> {
+    return this.thermometerService.getThermometerDataByDeviceIdAndTimeRange(deviceId, startTime, endTime);
+  }
+
   public async getThermometerByDeviceId(deviceId: string): Promise<ThermometerOutput[]> {
     return this.thermometerService.getThermometerDataByDeviceId(deviceId);
   }

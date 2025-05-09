@@ -121,7 +121,7 @@ class ThermometerRoutes {
       this.thermometerFacade
         .getThermometerByDeviceId(req.params.deviceId)
         .then((data) => {
-          if (!data) {
+          if (!data || data.length === 0) {
             res.status(404).json({ success: false, message: 'No data found for the device' });
           } else {
             res.status(200).json({ success: true, data });
@@ -129,6 +129,100 @@ class ThermometerRoutes {
         })
         .catch(next);
     });
+
+  
+    /**
+     * @swagger
+     * /thermometer/device/{deviceId}/time-range:
+     *   get:
+     *     summary: Get thermometer data by device ID and time range
+     *     tags: [Thermometer]
+     *     parameters:
+     *       - in: path
+     *         name: deviceId
+     *         schema:
+     *           type: string
+     *         required: true
+     *         description: Device ID
+     *       - in: query
+     *         name: startTime
+     *         schema:
+     *           type: string
+     *           format: date-time
+     *         required: true
+     *         description: Start time of the range
+     *       - in: query
+     *         name: endTime
+     *         schema:
+     *           type: string
+     *           format: date-time
+     *         required: true
+     *         description: End time of the range
+     *     responses:
+     *       200:
+     *         description: Thermometer data for the device within the time range
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/ThermometerOutput'
+     *       400:
+     *         description: Invalid input parameters
+     *       404:
+     *         description: No data found
+     */
+    this.router.get('/device/:deviceId/time-range', (req, res, next) => {
+      const { deviceId } = req.params;
+      const { startTime, endTime } = req.query;
+
+      this.thermometerFacade
+        .getThermometerByDeviceIdAndTimeRange(deviceId, new Date(startTime as string), new Date(endTime as string))
+        .then((data) => {
+          if (!data || data.length === 0) {
+            res.status(404).json({ success: false, message: 'No data found for the specified device and time range' });
+          } else {
+            res.status(200).json({ success: true, data });
+          }
+        })
+        .catch(next);
+    });
+
+    /**
+ * @swagger
+ * /thermometer/device/{deviceId}/latest:
+ *   get:
+ *     summary: Get the latest thermometer data by device ID
+ *     tags: [Thermometer]
+ *     parameters:
+ *       - in: path
+ *         name: deviceId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Device ID
+ *     responses:
+ *       200:
+ *         description: Latest thermometer data for the device
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ThermometerOutput'
+ *       404:
+ *         description: No data found
+ */
+this.router.get('/device/:deviceId/latest', (req, res, next) => {
+  this.thermometerFacade
+    .getLatestThermometerDataByDeviceId(req.params.deviceId)
+    .then((data) => {
+      if (!data) {
+        res.status(404).json({ success: false, message: 'No data found for the device' });
+      } else {
+        res.status(200).json({ success: true, data });
+      }
+    })
+    .catch(next);
+});
 
     /**
      * @swagger
