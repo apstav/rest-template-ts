@@ -164,26 +164,22 @@ class ThermometerController {
     }
   };
 
-  public deleteThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public deleteThermometerByDeviceId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { deviceId } = req.params;
+  
     try {
-      this.validate(idParamSchema, req.params);
-
-      const { id } = req.params;
-      logger.info(`Deleting thermometer data for ID: ${id}`);
-
-      const result = await this.facade.deleteThermometer(id);
-
-      if (!result) {
-        throw new NotFoundError(`Thermometer data with ID ${id} not found`);
-      }
-
-      logger.info(`Successfully deleted data for ID: ${id}`);
-      res.status(200).send();
+      logger.info(`Deleting thermometer data for device ID: ${deviceId}`);
+      const deletedCount = await this.facade.deleteThermometerByDeviceId(deviceId);
+  
+      logger.info(`Successfully deleted ${deletedCount} records for device ID: ${deviceId}`);
+      res.status(200).json({
+        success: true,
+        message: `${deletedCount} records deleted for device ID: ${deviceId}`,
+      });
     } catch (error) {
       next(error);
     }
   };
-
   public generateFakeData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const count = parseInt(req.query.count as string) || 10;
 

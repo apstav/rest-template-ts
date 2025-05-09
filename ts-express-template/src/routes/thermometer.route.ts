@@ -188,21 +188,27 @@ class ThermometerRoutes {
      */
     this.router.put('/:id', this.controller.updateThermometerData);
 
+   
     /**
      * @swagger
-     * /thermometer/{id}:
+     * /thermometer/device/{deviceId}:
      *   delete:
-     *     summary: Delete thermometer data
+     *     summary: Delete thermometer data by device ID
      *     tags: [Thermometer]
      *     parameters:
      *       - in: path
-     *         name: id
+     *         name: deviceId
      *         schema:
      *           type: string
      *         required: true
-     *         description: Thermometer data ID
+     *         description: Device ID
+     *     responses:
+     *       200:
+     *         description: Successfully deleted thermometer data
+     *       404:
+     *         description: No data found for the device ID
      */
-    this.router.delete('/:id', this.controller.deleteThermometerData);
+    this.router.delete('/device/:deviceId', this.controller.deleteThermometerByDeviceId);
 
     /**
      * @swagger

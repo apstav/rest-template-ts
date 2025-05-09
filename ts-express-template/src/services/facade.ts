@@ -40,10 +40,9 @@ export class ThermometerFacade {
     return this.thermometerService.updateThermometerData(id, data);
   }
 
-  public async deleteThermometer(id: string): Promise<ThermometerOutput | null> {
-    return this.thermometerService.deleteThermometerData(id);
+  public async deleteThermometerByDeviceId(deviceId: string): Promise<number> {
+    return this.thermometerService.deleteThermometerByDeviceId(deviceId);
   }
-
   public async generateFakeData(count: number = 1): Promise<ThermometerOutput[]> {
     return this.thermometerService.generateFakeData(count);
   }

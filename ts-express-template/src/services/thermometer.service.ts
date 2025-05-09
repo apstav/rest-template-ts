@@ -57,26 +57,6 @@ class ThermometerService {
     return this.toOutput({ _id: result.insertedId, ...data });
   }
 
-  // public async updateThermometerData(id: string, data: Partial<ThermometerInput>): Promise<ThermometerOutput | null> {
-  //   const result = await this.collection.findOneAndUpdate(
-  //     { _id: new ObjectId(id) },
-  //     { $set: data },
-  //     { returnDocument: 'after' }
-  //   );
-  //   if (!result) {
-  //     return null; // Handle the case where result is null
-  //   }
-  //   return result.value ? this.toOutput(result.value) : null;
-  // }
-
-  // public async deleteThermometerData(id: string): Promise<ThermometerOutput | null> {
-  //   const result = await this.collection.findOneAndDelete({ _id: new ObjectId(id) });
-  //   if (!result) {
-  //     throw new NotFoundError(`Thermometer data with ID ${id} not found`);
-  //   }
-  //   return result.value ? this.toOutput(result.value) : null;
-  //   ;
-  // }
   public async updateThermometerData(
   id: string,
   data: Partial<ThermometerInput>
@@ -97,14 +77,14 @@ class ThermometerService {
   return this.toOutput(result.value);
 }
 
-public async deleteThermometerData(id: string): Promise<ThermometerOutput | null> {
-  const result = await this.collection.findOneAndDelete({ _id: new ObjectId(id) });
+public async deleteThermometerByDeviceId(deviceId: string): Promise<number> {
+  const result = await this.collection.deleteMany({ deviceId });
 
-  if (!result) {
-    throw new NotFoundError(`Thermometer data with ID ${id} not found`);
+  if (result.deletedCount === 0) {
+    throw new NotFoundError(`No thermometer data found for device ID ${deviceId}`);
   }
 
-  return this.toOutput(result.value);
+  return result.deletedCount; // Return the number of deleted documents
 }
 
   public async generateFakeData(count: number): Promise<ThermometerOutput[]> {
