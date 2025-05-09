@@ -32,7 +32,7 @@ describe('POST /api/thermometer', () => {
 describe('POST /api/thermometer/generate-fake-data', () => {
   it('should generate fake thermometer data', async () => {
     const response = await request(app).post('/api/thermometer/generate-fake-data').query({ count: 5 });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(Array.isArray(response.body.data)).toBe(true);
     expect(response.body.data.length).toBe(5);
   });

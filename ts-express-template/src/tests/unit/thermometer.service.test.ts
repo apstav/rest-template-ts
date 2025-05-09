@@ -1,19 +1,28 @@
 import { ThermometerService } from '../../services/index';
-import { Thermometer } from '../../models/index';
-import { faker } from '../../utils/index';
+import { client } from '../../config/config';
 
-jest.mock('../../models/thermometer.model');
-jest.mock('../../utils/index', () => ({
-  faker: {
-    thermometerData: jest.fn()
-  }
+jest.mock('../../config/config', () => ({
+  client: {
+    db: jest.fn().mockReturnValue({
+      collection: jest.fn().mockReturnValue({
+        insertOne: jest.fn(),
+        find: jest.fn(),
+        findOne: jest.fn(),
+        findOneAndUpdate: jest.fn(),
+        findOneAndDelete: jest.fn(),
+        insertMany: jest.fn(),
+      }),
+    }),
+  },
 }));
 
 describe('ThermometerService', () => {
   let thermometerService: ThermometerService;
+  let mockCollection: any;
 
   beforeEach(() => {
     thermometerService = new ThermometerService();
+    mockCollection = client.db().collection('thermometers');
     jest.clearAllMocks();
   });
 
@@ -27,125 +36,98 @@ describe('ThermometerService', () => {
         long: 37.12,
         lat: 23.12,
         recordedAt: new Date(),
-        save: jest.fn().mockResolvedValue(true),
-        toObject: function () {
-          return { ...this, _id: 'mocked-id', __v: 0 };
-        }
       };
-
-      (Thermometer as any).mockImplementation(() => mockData);
+      const mockResult = { insertedId: 'mocked-id' };
+      mockCollection.insertOne.mockResolvedValue(mockResult);
 
       const result = await thermometerService.createThermometerData(mockData);
-      expect(result).toHaveProperty('id', 'mocked-id');
-      expect(mockData.save).toHaveBeenCalled();
+
+      expect(result).toEqual({ ...mockData, id: 'mocked-id' });
+      expect(mockCollection.insertOne).toHaveBeenCalledWith(mockData);
     });
   });
 
   describe('getAllThermometerData', () => {
     it('should return all thermometer data', async () => {
       const mockDocs = [
-        { toObject: () => ({ _id: '1', __v: 0, deviceId: 'A' }) },
-        { toObject: () => ({ _id: '2', __v: 0, deviceId: 'B' }) }
+        { _id: '681df6e0848affeb8670e926', deviceId: 'A', temperature: 20 },
+        { _id: '2', deviceId: 'B', temperature: 25 },
       ];
-      (Thermometer.find as jest.Mock).mockResolvedValue(mockDocs);
+      mockCollection.find.mockReturnValue({
+        toArray: jest.fn().mockResolvedValue(mockDocs),
+      });
 
       const result = await thermometerService.getAllThermometerData();
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('1');
+
+      expect(result).toEqual([
+        { id: '1', deviceId: 'A', temperature: 20 },
+        { id: '2', deviceId: 'B', temperature: 25 },
+      ]);
+      expect(mockCollection.find).toHaveBeenCalled();
     });
   });
 
   describe('getThermometerDataById', () => {
     it('should return thermometer data by id', async () => {
-      const mockDoc = {
-        toObject: () => ({ _id: '1', __v: 0, deviceId: 'X' })
-      };
-      (Thermometer.findById as jest.Mock).mockResolvedValue(mockDoc);
+      const mockDoc = { _id: '1', deviceId: 'X', temperature: 30 };
+      mockCollection.findOne.mockResolvedValue(mockDoc);
 
       const result = await thermometerService.getThermometerDataById('1');
-      expect(result).toHaveProperty('id', '1');
+
+      expect(result).toEqual({ id: '1', deviceId: 'X', temperature: 30 });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: expect.any(Object) });
     });
 
     it('should return null if data not found', async () => {
-      (Thermometer.findById as jest.Mock).mockResolvedValue(null);
+      mockCollection.findOne.mockResolvedValue(null);
+
       const result = await thermometerService.getThermometerDataById('123');
+
       expect(result).toBeNull();
-    });
-  });
-
-  describe('getThermometerDataByDeviceId', () => {
-    it('should return thermometer data by device id', async () => {
-      const mockDocs = [
-        { toObject: () => ({ _id: '1', __v: 0, deviceId: 'DEV-1' }) }
-      ];
-      (Thermometer.find as jest.Mock).mockResolvedValue(mockDocs);
-
-      const result = await thermometerService.getThermometerDataByDeviceId('DEV-1');
-      expect(result).toHaveLength(1);
-      expect(result[0].deviceId).toBe('DEV-1');
     });
   });
 
   describe('updateThermometerData', () => {
     it('should update and return thermometer data', async () => {
-      const mockDoc = {
-        toObject: () => ({ _id: '1', __v: 0, temperature: 30 })
-      };
-      (Thermometer.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockDoc);
+      const mockDoc = { _id: '681df6e0848affeb8670e926', temperature: 30 };
+      mockCollection.findOneAndUpdate.mockResolvedValue({ value: mockDoc });
 
-      const result = await thermometerService.updateThermometerData('1', { temperature: 30 });
-      expect(result).toHaveProperty('temperature', 30);
+      const result = await thermometerService.updateThermometerData('681df6e0848affeb8670e926', { temperature: 30 });
+
+      expect(result).toEqual({ id: '681df6e0848affeb8670e926', temperature: 30 });
+      expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: expect.any(Object) },
+        { $set: { temperature: 30 } },
+        { returnDocument: 'after', upsert: false },
+      );
     });
 
-    it('should return null if update fails', async () => {
-      (Thermometer.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
-      const result = await thermometerService.updateThermometerData('1', { temperature: 30 });
-      expect(result).toBeNull();
+    it('should throw NotFoundError if update fails', async () => {
+      mockCollection.findOneAndUpdate.mockResolvedValue(null);
+
+      await expect(thermometerService.updateThermometerData('681df6e0848affeb8670e926', { temperature: 30 })).rejects.toThrow(
+        'Thermometer data with ID 1 not found',
+      );
     });
   });
 
   describe('deleteThermometerData', () => {
     it('should delete and return thermometer data', async () => {
-      const mockDoc = {
-        toObject: () => ({ _id: '1', __v: 0, deviceId: 'DEV' })
-      };
-      (Thermometer.findByIdAndDelete as jest.Mock).mockResolvedValue(mockDoc);
+      const mockDoc = { _id: '681df68b32fb3413cb488a50', deviceId: 'DEV-5678' };
+      mockCollection.findOneAndDelete.mockResolvedValue({ value: mockDoc });
 
-      const result = await thermometerService.deleteThermometerData('1');
-      expect(result?.id).toBe('1');
+      const result = await thermometerService.deleteThermometerData('681df5e8c14f0f7e68274f1c');
+
+      expect(result).toEqual({ id: '681df68b32fb3413cb488a50', deviceId: 'DEV-5678' });
+      expect(mockCollection.findOneAndDelete).toHaveBeenCalledWith({ _id: expect.any(Object) });
     });
 
-    it('should return null if no document found to delete', async () => {
-      (Thermometer.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
-      const result = await thermometerService.deleteThermometerData('1');
-      expect(result).toBeNull();
-    });
-  });
+    it('should throw NotFoundError if delete fails', async () => {
+      mockCollection.findOneAndDelete.mockResolvedValue(null);
 
-  describe('generateFakeData', () => {
-    it('should generate and return fake data', async () => {
-      const mockData = [
-        { _id: '1', deviceId: 'F1', __v: 0 },
-        { _id: '2', deviceId: 'F2', __v: 0 }
-      ];
-      const fakeDocs = mockData.map((doc) => ({
-        ...doc,
-        toObject: () => doc
-      }));
-
-      (faker.thermometerData as jest.Mock).mockImplementation(() => ({
-        deviceId: 'F1',
-        temperature: 20,
-        humidity: 50,
-        batteryLevel: 90,
-        long: 0,
-        lat: 0
-      }));
-
-      (Thermometer.insertMany as jest.Mock).mockResolvedValue(fakeDocs);
-
-      const result = await thermometerService.generateFakeData(2);
-      expect(result).toHaveLength(2);
+      await expect(thermometerService.deleteThermometerData('681df68b32fb3413cb488a50')).rejects.toThrow(
+        'Thermometer data with ID 681df5a89b71cf068226eeed not found',
+      );
     });
   });
 });

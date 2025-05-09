@@ -3,7 +3,7 @@ import app from '../../app';
 
 describe('PUT /api/thermometer/:id', () => {
   it('should update a specific thermometer entry', async () => {
-    const id = "681491d71d4dc58f7b101369"; // Replace with a valid ID from your database
+    const id = "681de6a76ebcd8b77954b53b"; // Replace with a valid ID from your database
     const updatedEntry = { temperature: 30.0 };
     const response = await request(app).put(`/api/thermometer/${id}`).send(updatedEntry);
     expect(response.status).toBe(200);

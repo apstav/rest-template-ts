@@ -3,7 +3,7 @@ import app from '../../app';
 
 describe('DELETE /api/thermometer/:id', () => {
   it('should delete a specific thermometer entry', async () => {
-    const id = "681491c2eed4ed3dd65d3afe"; // Replace with a valid ID from your database
+    const id = "681de82bf33a7e7c7b589643"; // Replace with a valid ID from your database
     const response = await request(app).delete(`/api/thermometer/${id}`);
     expect(response.status).toBe(200);
   });
