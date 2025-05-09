@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { ThermometerService } from '../services/index';
-import { ThermometerInput } from '../interfaces/index';
-import { logger, BadRequestError, NotFoundError, BaseError } from '../utils/index';
+import { ThermometerFacade } from '../services/facade';
+import { logger, BadRequestError, NotFoundError } from '../utils/index';
 import { createThermometerSchema, updateThermometerSchema, idParamSchema } from '../utils/thermometer.validator';
 import Joi from 'joi';
-import { Logger } from 'winston';
 
 class ThermometerController {
-  private readonly service: ThermometerService = new ThermometerService();
+  private readonly facade: ThermometerFacade = new ThermometerFacade();
 
   private validate(schema: Joi.Schema, data: any): void {
     const { error } = schema.validate(data);
@@ -21,7 +19,7 @@ class ThermometerController {
       this.validate(createThermometerSchema, req.body);
 
       logger.info('Creating new thermometer data', { data: req.body });
-      const newData = await this.service.createThermometerData(req.body);
+      const newData = await this.facade.createThermometer(req.body);
 
       logger.info('Successfully created thermometer data', { id: newData.id });
       res.status(201).json({
@@ -29,14 +27,14 @@ class ThermometerController {
         data: newData,
       });
     } catch (error) {
-      next(error); 
+      next(error);
     }
   };
 
   public getAllThermometerData = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       logger.info('Fetching all thermometer data');
-      const data = await this.service.getAllThermometerData();
+      const data = await this.facade.getAllThermometers();
 
       logger.info(`Successfully fetched ${data.length} records`);
       res.status(200).json({
@@ -45,7 +43,7 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      next(error); 
+      next(error);
     }
   };
 
@@ -54,7 +52,7 @@ class ThermometerController {
 
     try {
       logger.info(`Fetching thermometer data by ID: ${id}`);
-      const data = await this.service.getThermometerDataById(id);
+      const data = await this.facade.getThermometerById(id);
 
       if (!data) {
         logger.warn(`No data found for ID: ${id}`);
@@ -67,7 +65,7 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      next(error); 
+      next(error);
     }
   };
 
@@ -76,10 +74,12 @@ class ThermometerController {
 
     try {
       logger.info(`Fetching thermometer data for device ID: ${deviceId}`);
-      const data = await this.service.getThermometerDataByDeviceId(deviceId);
+      const data = await this.facade.getThermometerByDeviceId(deviceId);
+
       if (!data || data.length === 0) {
-        throw new NotFoundError(`Thermometer data with ID ${deviceId} not found`);
+        throw new NotFoundError(`Thermometer data with device ID ${deviceId} not found`);
       }
+
       logger.info(`Found ${data.length} records for device ID: ${deviceId}`);
       res.status(200).json({
         success: true,
@@ -87,55 +87,58 @@ class ThermometerController {
         data,
       });
     } catch (error) {
-      next(error); 
+      next(error);
     }
   };
 
   public getLatestThermometerDataByDeviceId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { deviceId } = req.params;
+    const { deviceId } = req.params;
 
-  try {
-    logger.info(`Fetching latest thermometer data for device ID: ${deviceId}`);
-    const data = await this.service.getLatestThermometerDataByDeviceId(deviceId);
+    try {
+      logger.info(`Fetching latest thermometer data for device ID: ${deviceId}`);
+      const data = await this.facade.getLatestThermometerDataByDeviceId(deviceId);
 
-    if (!data) {
-      throw new NotFoundError(`No data found for device ID ${deviceId}`);
-    }
+      if (!data) {
+        throw new NotFoundError(`No data found for device ID ${deviceId}`);
+      }
 
-    res.status(200).json({
-      success: true,
-      data,
-    });
+      res.status(200).json({
+        success: true,
+        data,
+      });
     } catch (error) {
-    next(error);
+      next(error);
     }
   };
 
-  public getThermometerDataByDeviceIdAndTimeRange = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { deviceId } = req.params;
-    const { startTime, endTime } = req.query;
+  public getThermometerDataByDeviceIdAndTimeRange = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { deviceId } = req.params;
+      const { startTime, endTime } = req.query;
 
-    if (!deviceId || !startTime || !endTime) {
-      res.status(400).json({ message: 'Missing required parameters: deviceId, startTime, or endTime' });
-      return;
+      if (!deviceId || !startTime || !endTime) {
+        throw new BadRequestError('Missing required parameters: deviceId, startTime, or endTime');
+      }
+
+      const start = new Date(startTime as string);
+      const end = new Date(endTime as string);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new BadRequestError('Invalid date format for startTime or endTime');
+      }
+
+      const data = await this.facade.getThermometerByDeviceIdAndTimeRange(deviceId, start, end);
+      if (data.length === 0) {
+        throw new NotFoundError(`No data found for device ID ${deviceId} in the specified time range`);
+      }
+      res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      next(error);
     }
-
-    const start = new Date(startTime as string);
-    const end = new Date(endTime as string);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      res.status(400).json({ message: 'Invalid date format for startTime or endTime' });
-      return;
-    }
-
-    const data = await this.service.getThermometerDataByDeviceIdAndTimeRange(deviceId, start, end);
-    res.status(200).json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
+  };
 
   public updateThermometerData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -145,11 +148,11 @@ class ThermometerController {
       const { id } = req.params;
       logger.info(`Updating thermometer data for ID: ${id}`, { updateData: req.body });
 
-      const result = await this.service.updateThermometerData(id, req.body);
+      const result = await this.facade.updateThermometer(id, req.body);
       if (!result) {
         throw new NotFoundError(`Thermometer data with ID ${id} not found`);
       }
-      
+
       logger.info(`Successfully updated data for ID: ${id}`);
       res.status(200).json({
         success: true,
@@ -168,8 +171,8 @@ class ThermometerController {
       const { id } = req.params;
       logger.info(`Deleting thermometer data for ID: ${id}`);
 
-      const result = await this.service.deleteThermometerData(id);
-      
+      const result = await this.facade.deleteThermometer(id);
+
       if (!result) {
         throw new NotFoundError(`Thermometer data with ID ${id} not found`);
       }
@@ -190,7 +193,7 @@ class ThermometerController {
       }
 
       logger.info(`Generating ${count} fake data entries`);
-      const data = await this.service.generateFakeData(count);
+      const data = await this.facade.generateFakeData(count);
 
       logger.info(`Successfully generated ${data.length} fake entries`);
       res.status(201).json({

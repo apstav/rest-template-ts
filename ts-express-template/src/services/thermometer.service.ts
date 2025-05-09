@@ -1,6 +1,8 @@
+import { not } from 'joi';
 import { client } from '../config/config'; 
 import { ThermometerInput, ThermometerOutput } from '../interfaces/index';
 import { ObjectId } from 'mongodb';
+import { NotFoundError } from '../utils/errors/notFoundError';
 
 
 
@@ -55,25 +57,55 @@ class ThermometerService {
     return this.toOutput({ _id: result.insertedId, ...data });
   }
 
-  public async updateThermometerData(id: string, data: Partial<ThermometerInput>): Promise<ThermometerOutput | null> {
-    const result = await this.collection.findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: data },
-      { returnDocument: 'after' }
-    );
-    if (!result) {
-      return null; // Handle the case where result is null
+  // public async updateThermometerData(id: string, data: Partial<ThermometerInput>): Promise<ThermometerOutput | null> {
+  //   const result = await this.collection.findOneAndUpdate(
+  //     { _id: new ObjectId(id) },
+  //     { $set: data },
+  //     { returnDocument: 'after' }
+  //   );
+  //   if (!result) {
+  //     return null; // Handle the case where result is null
+  //   }
+  //   return result.value ? this.toOutput(result.value) : null;
+  // }
+
+  // public async deleteThermometerData(id: string): Promise<ThermometerOutput | null> {
+  //   const result = await this.collection.findOneAndDelete({ _id: new ObjectId(id) });
+  //   if (!result) {
+  //     throw new NotFoundError(`Thermometer data with ID ${id} not found`);
+  //   }
+  //   return result.value ? this.toOutput(result.value) : null;
+  //   ;
+  // }
+  public async updateThermometerData(
+  id: string,
+  data: Partial<ThermometerInput>
+): Promise<ThermometerOutput | null> {
+  const result = await this.collection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: data },
+    {
+      returnDocument: 'after', // Keep using 'after' to get the updated document
+      upsert: false            // Prevents inserting if not found (optional but explicit)
     }
-    return result.value ? this.toOutput(result.value) : null;
+  );
+
+  if (!result) {
+    throw new NotFoundError; // No document was updated
   }
 
-  public async deleteThermometerData(id: string): Promise<ThermometerOutput | null> {
-    const result = await this.collection.findOneAndDelete({ _id: new ObjectId(id) });
-    if (!result) {
-      return null; // Handle the case where result is null
-    }
-    return result.value ? this.toOutput(result.value) : null;
+  return this.toOutput(result.value);
+}
+
+public async deleteThermometerData(id: string): Promise<ThermometerOutput | null> {
+  const result = await this.collection.findOneAndDelete({ _id: new ObjectId(id) });
+
+  if (!result) {
+    throw new NotFoundError(`Thermometer data with ID ${id} not found`);
   }
+
+  return this.toOutput(result.value);
+}
 
   public async generateFakeData(count: number): Promise<ThermometerOutput[]> {
     const fakeData: ThermometerInput[] = Array.from({ length: count }, (_, i) => ({
